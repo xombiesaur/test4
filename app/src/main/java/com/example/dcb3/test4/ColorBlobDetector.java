@@ -167,6 +167,7 @@ public class ColorBlobDetector {
         int yPos = tY;
 
         boolean BFlag = true;
+        //check hue value for pixel then increment to next pixel as directed by input
         do {
             double testHue2 = mHueMat.get(yPos,xPos)[0];
             if(testHue2<=(testHue+15)&& testHue2 >= (testHue-15)){
