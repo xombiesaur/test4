@@ -8,6 +8,7 @@ package com.example.dcb3.test4;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -116,21 +117,27 @@ public class ColorBlobDetector {
         //Imgproc.dilate(mMask, mDilatedMask, new Mat());
 
         //dcb3: my algorithm
-
+        //splits out hue mat from hsv mat
         Core.split(mHsvMat, mlHsv);
-
         mHueMat = mlHsv.get(0);
 
         //Imgproc.cvtColor(mHueMat, mMask, Imgproc.COLOR_HSV2RGB_FULL);
 
+        //grab the hue value for the touch point pixel
         double[] pixel = mHueMat.get(tY, tX);
+        double testHue = pixel[0];
+        //use getbound to get the x and y bounds for the shape
+        int[][] boundList = new int[4][2];
+        boundList[0] = getBound(testHue,1,0);
+        boundList[1] = getBound(testHue,0,1);
+        boundList[2] = getBound(testHue,-1,0);
+        boundList[3] = getBound(testHue,0,-1);
 
-        List<Double> xList = new ArrayList<Double>();
 
 
 
-        Log.i(TAG, ""+pixel[0]);//+","+pixel[1]+","+pixel[2]);
-
+        Log.i(TAG, "Hue is "+pixel[0]);//+","+pixel[1]+","+pixel[2]);
+        Log.i(TAG, "bounds "+Arrays.deepToString(boundList));
 
 
 
@@ -152,5 +159,27 @@ public class ColorBlobDetector {
     }
     public int gettY() {
         return tY;
+    }
+
+    private int[] getBound(double hue, int xAdd, int yAdd){
+        double testHue = hue;
+        int xPos = tX;
+        int yPos = tY;
+
+        boolean BFlag = true;
+        do {
+            double testHue2 = mHueMat.get(yPos,xPos)[0];
+            if(testHue2<=(testHue+15)&& testHue2 >= (testHue-15)){
+                testHue = testHue2;
+
+            }
+            else{BFlag = false;}
+            xPos += xAdd;
+            yPos += yAdd;
+
+        } while(BFlag);
+        int[] corPair = {xPos,yPos};
+        return corPair;
+
     }
 }
