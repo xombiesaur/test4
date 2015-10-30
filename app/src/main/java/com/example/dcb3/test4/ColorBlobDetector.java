@@ -113,19 +113,17 @@ public class ColorBlobDetector {
 
         Imgproc.cvtColor(mPyrDownMat, mHsvMat, Imgproc.COLOR_RGB2HSV_FULL);
 
-        //Core.inRange(mHsvMat, mLowerBound, mUpperBound, mMask);
-        //Imgproc.dilate(mMask, mDilatedMask, new Mat());
 
         //dcb3: my algorithm
         //splits out hue mat from hsv mat
         Core.split(mHsvMat, mlHsv);
         mHueMat = mlHsv.get(0);
 
-        //Imgproc.cvtColor(mHueMat, mMask, Imgproc.COLOR_HSV2RGB_FULL);
 
         //grab the hue value for the touch point pixel
         double[] pixel = mHueMat.get(tY, tX);
         double testHue = pixel[0];
+        Log.i(TAG, "Hue is "+pixel[0]);//+","+pixel[1]+","+pixel[2]);
         //use getbound to get the x and y bounds for the shape
         int[][] boundList = new int[4][2];
         boundList[0] = getBound(testHue,1,0);
@@ -133,12 +131,9 @@ public class ColorBlobDetector {
         boundList[2] = getBound(testHue,-1,0);
         boundList[3] = getBound(testHue,0,-1);
 
-
-
-
-        Log.i(TAG, "Hue is "+pixel[0]);//+","+pixel[1]+","+pixel[2]);
         Log.i(TAG, "bounds "+Arrays.deepToString(boundList));
 
+        
 
 
     }
