@@ -132,6 +132,17 @@ public class ColorBlobDetector {
         boundList[3] = getBound(testHue,0,-1);
 
         Log.i(TAG, "bounds "+Arrays.deepToString(boundList));
+        //find the average of the object
+        int bll = boundList.length;
+        int newX = tX;
+        int newY = tY;
+        for(int i=0; i<bll; i++){
+            newX += boundList[i][0];
+            newY += boundList[i][1];
+        }
+        //set it as the neww "touch" input
+        tX = (newX/bll);
+        tY = (newY/bll);
 
         
 
