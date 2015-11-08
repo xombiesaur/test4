@@ -17,6 +17,7 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfInt;
 import org.opencv.core.MatOfPoint;
+import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
@@ -143,8 +144,9 @@ public class ColorBlobDetector {
         //set it as the neww "touch" input
         tX = (newX/bll);
         tY = (newY/bll);
+        Rect boundbox = new Rect(boundList[2][0],boundList[3][1],(boundList[0][0]-boundList[2][0]),(boundList[1][1]-boundList[3][1]));
 
-        
+
 
 
     }
