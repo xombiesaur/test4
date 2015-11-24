@@ -132,7 +132,7 @@ public class ColorBlobDetector {
         boundList[2] = getBound(testHue,-1,0);
         boundList[3] = getBound(testHue,0,-1);
 
-        Log.i(TAG, "bounds "+Arrays.deepToString(boundList));
+        //Log.i(TAG, "bounds "+Arrays.deepToString(boundList));
         //find the average of the object
         int bll = boundList.length;
         int newX = tX;
@@ -177,8 +177,11 @@ public class ColorBlobDetector {
         boolean BFlag = true;
         //check hue value for pixel then increment to next pixel as directed by input
         do {
-            double testHue2 = mHueMat.get(yPos,xPos)[0];
-            if(testHue2<=(testHue+15)&& testHue2 >= (testHue-15)){
+            double [] testHueA = mHueMat.get(yPos,xPos);
+            Log.i(TAG, "xy , "+xPos+","+yPos);
+            //Log.i(TAG, "color,  "+testHueA[0]);
+            double testHue2 = testHueA[0];
+            if(testHue2<=(testHue+5)&& testHue2 >= (testHue-5)){
                 testHue = testHue2;
 
             }
@@ -186,8 +189,9 @@ public class ColorBlobDetector {
             xPos += xAdd;
             yPos += yAdd;
 
-        } while(BFlag);
+        } while(BFlag && (xPos > 0 && yPos > 0));
         int[] corPair = {xPos,yPos};
+        //Log.i(TAG, "x y out, "+xPos+","+yPos);
         return corPair;
 
     }
