@@ -1,10 +1,5 @@
 package com.example.dcb3.test4;
 
-/**
- * Created by dcb3 on 10/21/15.
- * Edited by npr216 on 10/27/15.
- */
-
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -55,8 +50,14 @@ public class ColorBlobDetector {
     private Mat mSpectrum = new Mat();
     private List<MatOfPoint> mContours = new ArrayList<MatOfPoint>();
     private List<Point> pointList = new ArrayList<Point>();
+    private List<Point> edgeList = new ArrayList<Point>();
+    private List<Point> opointList = new ArrayList<Point>();
     private int tX = 0;
     private int tY = 0;
+    private int xmax = 0;
+    private int ymax = 0;
+    private int xmin = 0;
+    private int ymin = 0;
 
 
     // Cache
@@ -123,6 +124,15 @@ public class ColorBlobDetector {
         Core.split(mHsvMat, mlHsv);
         mHueMat = mlHsv.get(0);
 
+        mContours = new ArrayList<MatOfPoint>();
+        pointList = new ArrayList<Point>();
+        edgeList = new ArrayList<Point>();
+        opointList = new ArrayList<Point>();
+        xmin = mHueMat.cols();
+        ymin = mHueMat.rows();
+        xmax = 0;
+        ymax = 0;
+
         int tempr = mHueMat.rows();
         int tempc = mHueMat.cols();
         //set sero mat to a bunch of zeros
@@ -133,11 +143,17 @@ public class ColorBlobDetector {
         double testHue = pixel[0];
         Log.i(TAG, "Hue is " + pixel[0]);//+","+pixel[1]+","+pixel[2]);
         //X is col Y is row
-        getBound(testHue, tX, tY);
-
+        Point starthere = new Point(tX,tY);
+        opointList.add(starthere);
+        while(opointList.size()>0 && pointList.size() < 2000) {
+            //Log.i(TAG,"while while while");
+            getBound(testHue, opointList.get(0));
+        }
         MatOfPoint pointmat = new MatOfPoint();
         pointmat.fromList(pointList);
         mContours.add(pointmat);
+        tX = ((xmin+xmax)/2);
+        tY = ((ymin+ymax)/2);
 
 
     }
@@ -160,56 +176,94 @@ public class ColorBlobDetector {
         return tY;
     }
 
-    private void getBound(double hue, int c, int r){
+    private void getBound(double hue, Point checkPoint){
         double testHue = hue;
-        Point inpoint = new Point(c,r);
-        //Log.i(TAG, "you made it!");
-        if((c < mHueMat.cols()) && r < mHueMat.rows()){
+        int c = (int)checkPoint.x;
+        int r = (int)checkPoint.y;
+        int j = 4;
+
+
+
+
+        //Point inpoint = new Point(c,r);
+        Log.i(TAG, ""+pointList.size());
+
+        if((checkPoint.x < mHueMat.cols()) && (checkPoint.y < mHueMat.rows())){
             //  c max = 960         r max = 750
-            double [] testHueA = mHueMat.get(r,c);
-            if (!pointList.contains(inpoint)){
+            double [] testHueA = mHueMat.get((int)checkPoint.y,(int)checkPoint.x);
+            if (!pointList.contains(checkPoint)&& !edgeList.contains(checkPoint)){
                 //Log.i(TAG,"dos");
                 //Log.i(TAG, r +" "+ c );
-                if((testHueA[0] <= hue+2)&&(testHueA[0] >= hue-2)) {
+                if((testHueA[0] <= hue+1)&&(testHueA[0] >= hue-1)) {
                     //Log.i(TAG,"tres");
-                    pointList.add(inpoint);
-                    inpoint = new Point(c+1,r);
-                    if (!pointList.contains(inpoint)) {
-                        getBound(testHueA[0], c + 1, r);
+                    ///pointList.add(inpoint);
+                    pointList.add(checkPoint);
+                    if(c>xmax){
+                        xmax = c;
                     }
-                    inpoint = new Point(c+1,r+1);
-                    if (!pointList.contains(inpoint)) {
-                        getBound(testHueA[0], c + 1, r +1);
+                    else if (c<xmin){
+                        xmin = c;
                     }
-                    inpoint = new Point(c,r+1);
-                    if (!pointList.contains(inpoint)) {
-                        getBound(testHueA[0], c , r + 1);
+
+                    if(r>ymax){
+                        ymax = r;
                     }
-                    inpoint = new Point(c-1,r+1);
-                    if (!pointList.contains(inpoint)) {
-                        getBound(testHueA[0], c - 1, r + 1);
+                    else if (r<ymin){
+                        ymin = r;
                     }
-                    inpoint = new Point(c-1,r);
+
+                    Point inpoint = new Point( c + j, r);
                     if (!pointList.contains(inpoint)) {
-                        getBound(testHueA[0], c - 1, r);
+                        opointList.add(inpoint);
                     }
-                    inpoint = new Point(c-1,r-1);
+                    inpoint = new Point( c + j, r + j);
                     if (!pointList.contains(inpoint)) {
-                        getBound(testHueA[0], c - 1, r - 1);
+                        opointList.add(inpoint);
                     }
-                    inpoint = new Point(c,r-1);
+                    inpoint = new Point( c , r + j);
                     if (!pointList.contains(inpoint)) {
-                        getBound(testHueA[0], c , r -1);
+                        opointList.add(inpoint);
                     }
-                    inpoint = new Point(c+1,r-1);
+                    inpoint = new Point( c - j ,r + j);
                     if (!pointList.contains(inpoint)) {
-                        getBound(testHueA[0], c + 1, r -1);
+                        opointList.add(inpoint);
                     }
+                    inpoint = new Point( c - j, r );
+                    if (!pointList.contains(inpoint)) {
+                        opointList.add(inpoint);
+                    }
+                    inpoint = new Point( c - j, r - j);
+                    if (!pointList.contains(inpoint)) {
+                        opointList.add(inpoint);
+                    }
+                    inpoint = new Point( c , r - j);
+                    if (!pointList.contains(inpoint)) {
+                        opointList.add(inpoint);
+                    }
+                    inpoint = new Point( c + j, r - j);
+                    if (!pointList.contains(inpoint)) {
+                        opointList.add(inpoint);
+                    }
+                    opointList.remove(0);
                     //Log.i(TAG, "all surronding pixels tested");
                     //Log.i(TAG, r +" "+ c );
                 }
+                else{
+                    //Log.i(TAG, checkPoint.y +" "+ checkPoint.x );
+                    edgeList.add(checkPoint);
+                    opointList.remove(0);
+                }
+            }
+            else{
+
+                opointList.remove(0);
             }
         }
+        else{
+            edgeList.add(checkPoint);
+            opointList.remove(0);
+        }
+
     }
     public MatOfInt zeroset(MatOfInt matin){
         for(int a=0;a<matin.rows();a++){

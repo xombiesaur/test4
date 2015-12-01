@@ -180,7 +180,7 @@ public class MainActivity extends Activity implements OnTouchListener, CvCameraV
         Imgproc.resize(mDetector.getSpectrum(), mSpectrum, SPECTRUM_SIZE);
 
         mIsColorSelected = true;
-        flagcount = 100;
+        //flagcount = 100;
 
         touchedRegionRgba.release();
         touchedRegionHsv.release();
@@ -190,9 +190,10 @@ public class MainActivity extends Activity implements OnTouchListener, CvCameraV
 
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
         mRgba = inputFrame.rgba();
-        if (flagcount == 0){
+       /* if (flagcount == 0){
             mIsColorSelected = false;
         }
+        */
         if (mIsColorSelected) {
            mDetector.process(mRgba);
             /*List<MatOfPoint> contours = mDetector.getContours();
@@ -212,7 +213,7 @@ public class MainActivity extends Activity implements OnTouchListener, CvCameraV
 
             Mat spectrumLabel = mRgba.submat(4, 4 + mSpectrum.rows(), 70, 70 + mSpectrum.cols());
             mSpectrum.copyTo(spectrumLabel);
-            flagcount -= 1;
+            //flagcount -= 1;
         }
 
         return mRgba;
