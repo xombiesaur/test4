@@ -194,18 +194,19 @@ public class MainActivity extends Activity implements OnTouchListener, CvCameraV
             mIsColorSelected = false;
         }
         if (mIsColorSelected) {
-            mDetector.process(mRgba);
-//            List<MatOfPoint> contours = mDetector.getContours();
-//            Log.e(TAG, "Contours count: " + contours.size());
-//            Mat con1;
-//            if (contours.size() > 0) {
-//                con1 = contours.get(0);
-//
-//                //Point point1 = con1.get(0,0);
-//                Imgproc.drawContours(mRgba, contours, -1, CONTOUR_COLOR, 2, 4, con1, 0, new Point(0, 0));
-//            }
+           mDetector.process(mRgba);
+            /*List<MatOfPoint> contours = mDetector.getContours();
+            Log.e(TAG, "Contours count: " + contours.size());
+            Mat con1;
+            if (contours.size() > 0) {
+                con1 = contours.get(0);
+
+                //Point point1 = con1.get(0,0);
+                Imgproc.drawContours(mRgba, contours, -1, CONTOUR_COLOR, 2, 4, con1, 0, new Point(0, 0));
+            }*/
+            Imgproc.drawContours(mRgba,mDetector.getContours(),-1, CONTOUR_COLOR, 2, 4, mDetector.getContours().get(0), 0, new Point(0, 0));
             // this switches the view from camera to the masked view
-            mRgba = mDetector.getMask();
+            //mRgba = mDetector.getMask();
             Mat colorLabel = mRgba.submat(104, 124, 104, 124);
             colorLabel.setTo(mBlobColorRgba);
 

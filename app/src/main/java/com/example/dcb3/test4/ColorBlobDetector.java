@@ -17,6 +17,7 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfInt;
 import org.opencv.core.MatOfPoint;
+import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
@@ -53,11 +54,13 @@ public class ColorBlobDetector {
     private Scalar mColorRadius = new Scalar(25,50,50,0);
     private Mat mSpectrum = new Mat();
     private List<MatOfPoint> mContours = new ArrayList<MatOfPoint>();
+    private List<Point> pointList = new ArrayList<Point>();
     private int tX = 0;
     private int tY = 0;
 
 
     // Cache
+    Mat zeros = new MatOfInt();
     Mat mPyrDownMat = new Mat();
     Mat mHsvMat = new Mat();
     Mat mMask = new Mat();
@@ -120,33 +123,21 @@ public class ColorBlobDetector {
         Core.split(mHsvMat, mlHsv);
         mHueMat = mlHsv.get(0);
 
-
+        int tempr = mHueMat.rows();
+        int tempc = mHueMat.cols();
+        //set sero mat to a bunch of zeros
+     //   zeros = new MatOfInt(tempr,tempc);
+     //   zeros=zeroset(zeros);
         //grab the hue value for the touch point pixel
         double[] pixel = mHueMat.get(tY, tX);
         double testHue = pixel[0];
-        Log.i(TAG, "Hue is "+pixel[0]);//+","+pixel[1]+","+pixel[2]);
-        //use getbound to get the x and y bounds for the shape
-        int[][] boundList = new int[4][2];
-        boundList[0] = getBound(testHue,1,0);
-        boundList[1] = getBound(testHue,0,1);
-        boundList[2] = getBound(testHue,-1,0);
-        boundList[3] = getBound(testHue,0,-1);
+        Log.i(TAG, "Hue is " + pixel[0]);//+","+pixel[1]+","+pixel[2]);
+        //X is col Y is row
+        getBound(testHue, tX, tY);
 
-        //Log.i(TAG, "bounds "+Arrays.deepToString(boundList));
-        //find the average of the object
-        int bll = boundList.length;
-        int newX = tX;
-        int newY = tY;
-        for(int i=0; i<bll; i++){
-            newX += boundList[i][0];
-            newY += boundList[i][1];
-        }
-        //set it as the neww "touch" input
-        tX = (newX/bll);
-        tY = (newY/bll);
-        Rect boundbox = new Rect(boundList[2][0],boundList[3][1],(boundList[0][0]-boundList[2][0]),(boundList[1][1]-boundList[3][1]));
-
-
+        MatOfPoint pointmat = new MatOfPoint();
+        pointmat.fromList(pointList);
+        mContours.add(pointmat);
 
 
     }
@@ -169,30 +160,64 @@ public class ColorBlobDetector {
         return tY;
     }
 
-    private int[] getBound(double hue, int xAdd, int yAdd){
+    private void getBound(double hue, int c, int r){
         double testHue = hue;
-        int xPos = tX;
-        int yPos = tY;
-
-        boolean BFlag = true;
-        //check hue value for pixel then increment to next pixel as directed by input
-        do {
-            double [] testHueA = mHueMat.get(yPos,xPos);
-            Log.i(TAG, "xy , "+xPos+","+yPos);
-            //Log.i(TAG, "color,  "+testHueA[0]);
-            double testHue2 = testHueA[0];
-            if(testHue2<=(testHue+5)&& testHue2 >= (testHue-5)){
-                testHue = testHue2;
-
+        Point inpoint = new Point(c,r);
+        //Log.i(TAG, "you made it!");
+        if((c < mHueMat.cols()) && r < mHueMat.rows()){
+            //  c max = 960         r max = 750
+            double [] testHueA = mHueMat.get(r,c);
+            if (!pointList.contains(inpoint)){
+                //Log.i(TAG,"dos");
+                //Log.i(TAG, r +" "+ c );
+                if((testHueA[0] <= hue+2)&&(testHueA[0] >= hue-2)) {
+                    //Log.i(TAG,"tres");
+                    pointList.add(inpoint);
+                    inpoint = new Point(c+1,r);
+                    if (!pointList.contains(inpoint)) {
+                        getBound(testHueA[0], c + 1, r);
+                    }
+                    inpoint = new Point(c+1,r+1);
+                    if (!pointList.contains(inpoint)) {
+                        getBound(testHueA[0], c + 1, r +1);
+                    }
+                    inpoint = new Point(c,r+1);
+                    if (!pointList.contains(inpoint)) {
+                        getBound(testHueA[0], c , r + 1);
+                    }
+                    inpoint = new Point(c-1,r+1);
+                    if (!pointList.contains(inpoint)) {
+                        getBound(testHueA[0], c - 1, r + 1);
+                    }
+                    inpoint = new Point(c-1,r);
+                    if (!pointList.contains(inpoint)) {
+                        getBound(testHueA[0], c - 1, r);
+                    }
+                    inpoint = new Point(c-1,r-1);
+                    if (!pointList.contains(inpoint)) {
+                        getBound(testHueA[0], c - 1, r - 1);
+                    }
+                    inpoint = new Point(c,r-1);
+                    if (!pointList.contains(inpoint)) {
+                        getBound(testHueA[0], c , r -1);
+                    }
+                    inpoint = new Point(c+1,r-1);
+                    if (!pointList.contains(inpoint)) {
+                        getBound(testHueA[0], c + 1, r -1);
+                    }
+                    //Log.i(TAG, "all surronding pixels tested");
+                    //Log.i(TAG, r +" "+ c );
+                }
             }
-            else{BFlag = false;}
-            xPos += xAdd;
-            yPos += yAdd;
-
-        } while(BFlag && (xPos > 0 && yPos > 0));
-        int[] corPair = {xPos,yPos};
-        //Log.i(TAG, "x y out, "+xPos+","+yPos);
-        return corPair;
-
+        }
+    }
+    public MatOfInt zeroset(MatOfInt matin){
+        for(int a=0;a<matin.rows();a++){
+            //a is row b is column
+            for(int b =0;b<matin.cols();b++){
+                matin.put(a,b,0);
+            }
+        }
+        return matin;
     }
 }
