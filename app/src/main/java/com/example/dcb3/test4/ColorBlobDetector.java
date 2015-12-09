@@ -129,9 +129,6 @@ public class ColorBlobDetector {
         mContours.add(pointmat);
         tX = ((xmin+xmax)/2);
         tY = ((ymin+ymax)/2);
-
-
-
     }
 
     public Mat getMask() {
