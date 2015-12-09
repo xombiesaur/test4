@@ -1,10 +1,11 @@
 package com.example.dcb3.test4;
 
+import android.graphics.Color;
 import android.util.Log;
+import android.widget.EditText;
+import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 
 import org.opencv.core.Core;
@@ -13,30 +14,10 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfInt;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
-import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
+import org.w3c.dom.Text;
 
-class Pixel<X,Y> {
-    private X x;
-    private Y y;
-    public Pixel(X x, Y y){
-        this.x = x;
-        this.y = y;
-    }
-    public X getX(){
-        return x;
-    }
-    public Y gety(){
-        return y;
-    }
-    public void setL(X x){
-        this.x = x;
-    }
-    public void setR(Y y){
-        this.y = y;
-    }
-}
 public class ColorBlobDetector {
 
     private static final String  TAG              = "colorblobdetec::";
@@ -60,22 +41,12 @@ public class ColorBlobDetector {
     private int ymin = 0;
 
 
-    // Cache
-    Mat zeros = new MatOfInt();
+
     Mat mPyrDownMat = new Mat();
     Mat mHsvMat = new Mat();
-    Mat mMask = new Mat();
-    Mat mDilatedMask = new Mat();
-    Mat mHierarchy = new Mat();
     Mat mHueMat = new Mat();
-    Mat HsvS = new Mat();
-    Mat HsvV = new Mat();
     List<Mat> mlHsv = new ArrayList(3);
-    List<Mat> mlHsv2 = new ArrayList(3);
 
-    public void setColorRadius(Scalar radius) {
-        mColorRadius = radius;
-    }
 
     public void setHsvColor(Scalar hsvColor) {
         double minH = (hsvColor.val[0] >= mColorRadius.val[0]) ? hsvColor.val[0]-mColorRadius.val[0] : 0;
@@ -107,9 +78,6 @@ public class ColorBlobDetector {
         return mSpectrum;
     }
 
-    public void setMinContourArea(double area) {
-        mMinContourArea = area;
-    }
 
     public void process(Mat rgbaImage) {
         mPyrDownMat=rgbaImage;
@@ -118,34 +86,41 @@ public class ColorBlobDetector {
 
         Imgproc.cvtColor(mPyrDownMat, mHsvMat, Imgproc.COLOR_RGB2HSV_FULL);
 
+        //mPyrDownMat.release();
 
         //dcb3: my algorithm
         //splits out hue mat from hsv mat
         Core.split(mHsvMat, mlHsv);
         mHueMat = mlHsv.get(0);
 
+        mHsvMat.release();
+
         mContours = new ArrayList<MatOfPoint>();
         pointList = new ArrayList<Point>();
         edgeList = new ArrayList<Point>();
         opointList = new ArrayList<Point>();
+
+//        xmin = mPyrDownMat.cols();
+//        ymin = mPyrDownMat.rows();
         xmin = mHueMat.cols();
         ymin = mHueMat.rows();
         xmax = 0;
         ymax = 0;
 
-        int tempr = mHueMat.rows();
-        int tempc = mHueMat.cols();
-        //set sero mat to a bunch of zeros
-     //   zeros = new MatOfInt(tempr,tempc);
-     //   zeros=zeroset(zeros);
+
         //grab the hue value for the touch point pixel
         double[] pixel = mHueMat.get(tY, tX);
-        double testHue = pixel[0];
-        Log.i(TAG, "Hue is " + pixel[0]);//+","+pixel[1]+","+pixel[2]);
+//        double[] pixel = mPyrDownMat.get(tY, tX);
+//        float[] pixel2 = new float[3];
+//        Color.RGBToHSV((int) pixel[0],(int) pixel[1],(int)pixel[2],pixel2);
+
+        int testHue = (int)pixel[0];
+        //
+        //Log.i(TAG, "Hue is " + pixel2[0] +","+pixel2[1]+","+pixel2[2]);
         //X is col Y is row
         Point starthere = new Point(tX,tY);
         opointList.add(starthere);
-        while(opointList.size()>0 && pointList.size() < 2000) {
+        while(opointList.size()>0 && pointList.size() < 1600) {
             //Log.i(TAG,"while while while");
             getBound(testHue, opointList.get(0));
         }
@@ -154,6 +129,7 @@ public class ColorBlobDetector {
         mContours.add(pointmat);
         tX = ((xmin+xmax)/2);
         tY = ((ymin+ymax)/2);
+
 
 
     }
@@ -176,8 +152,8 @@ public class ColorBlobDetector {
         return tY;
     }
 
-    private void getBound(double hue, Point checkPoint){
-        double testHue = hue;
+    private void getBound(int hue, Point checkPoint){
+//        double testHue = hue;
         int c = (int)checkPoint.x;
         int r = (int)checkPoint.y;
         int j = 4;
@@ -186,15 +162,22 @@ public class ColorBlobDetector {
 
 
         //Point inpoint = new Point(c,r);
-        Log.i(TAG, ""+pointList.size());
+       // Log.i(TAG, ""+pointList.size());
 
         if((checkPoint.x < mHueMat.cols()) && (checkPoint.y < mHueMat.rows())){
+//        if((checkPoint.x < mPyrDownMat.cols()) && (checkPoint.y < mPyrDownMat.rows())){
             //  c max = 960         r max = 750
+            //Log.i(TAG,"uno");
             double [] testHueA = mHueMat.get((int)checkPoint.y,(int)checkPoint.x);
-            if (!pointList.contains(checkPoint)&& !edgeList.contains(checkPoint)){
+//            double [] testHueA = mPyrDownMat.get((int)checkPoint.y,(int)checkPoint.x);
+//            float [] testHueB = new float[3];
+//            Color.RGBToHSV((int) testHueA[0],(int) testHueA[1],(int)testHueA[2],testHueB);
+//            int checkhue = (int) testHueB[0];
+            if (!pointList.contains(checkPoint)&&!edgeList.contains(checkPoint)){
                 //Log.i(TAG,"dos");
                 //Log.i(TAG, r +" "+ c );
                 if((testHueA[0] <= hue+1)&&(testHueA[0] >= hue-1)) {
+//                if((checkhue <= hue+1)&&(checkhue >= hue-1)) {
                     //Log.i(TAG,"tres");
                     ///pointList.add(inpoint);
                     pointList.add(checkPoint);
@@ -216,11 +199,11 @@ public class ColorBlobDetector {
                     if (!pointList.contains(inpoint)) {
                         opointList.add(inpoint);
                     }
-                    inpoint = new Point( c + j, r + j);
+                    inpoint = new Point( c , r + j);
                     if (!pointList.contains(inpoint)) {
                         opointList.add(inpoint);
                     }
-                    inpoint = new Point( c , r + j);
+                    inpoint = new Point( c , r - j);
                     if (!pointList.contains(inpoint)) {
                         opointList.add(inpoint);
                     }
@@ -232,15 +215,15 @@ public class ColorBlobDetector {
                     if (!pointList.contains(inpoint)) {
                         opointList.add(inpoint);
                     }
-                    inpoint = new Point( c - j, r - j);
-                    if (!pointList.contains(inpoint)) {
-                        opointList.add(inpoint);
-                    }
-                    inpoint = new Point( c , r - j);
-                    if (!pointList.contains(inpoint)) {
-                        opointList.add(inpoint);
-                    }
                     inpoint = new Point( c + j, r - j);
+                    if (!pointList.contains(inpoint)) {
+                        opointList.add(inpoint);
+                    }
+                    inpoint = new Point( c + j, r + j);
+                    if (!pointList.contains(inpoint)) {
+                        opointList.add(inpoint);
+                    }
+                    inpoint = new Point( c - j, r - j);
                     if (!pointList.contains(inpoint)) {
                         opointList.add(inpoint);
                     }
@@ -265,13 +248,5 @@ public class ColorBlobDetector {
         }
 
     }
-    public MatOfInt zeroset(MatOfInt matin){
-        for(int a=0;a<matin.rows();a++){
-            //a is row b is column
-            for(int b =0;b<matin.cols();b++){
-                matin.put(a,b,0);
-            }
-        }
-        return matin;
-    }
+
 }

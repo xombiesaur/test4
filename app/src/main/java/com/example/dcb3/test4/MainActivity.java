@@ -1,6 +1,9 @@
 package com.example.dcb3.test4;
 
 import java.util.List;
+import java.util.logging.Handler;
+import java.util.logging.LogRecord;
+
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
 import org.opencv.android.LoaderCallbackInterface;
@@ -16,14 +19,11 @@ import org.opencv.core.Size;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.imgproc.Imgproc;
-import org.opencv.core.*;
 
 
+import android.app.Application;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+//import android.os.Handler;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -34,6 +34,7 @@ import android.view.MotionEvent;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.View.OnTouchListener;
+import android.widget.TextView;
 
 
 public class MainActivity extends Activity implements OnTouchListener, CvCameraViewListener2 {
@@ -50,6 +51,30 @@ public class MainActivity extends Activity implements OnTouchListener, CvCameraV
     private int                  tX;
     private int                  tY;
     private int                  flagcount;
+    public TextView              t;
+    public CharSequence          bigtext;
+    android.os.Handler texthandle = new android.os.Handler();
+    private Runnable             runnable;
+/*    public class hopethisworks extends Thread {
+        private static final String TAG = "hopethisworks";
+
+        @Override
+        public void run() {
+
+                int xx = mDetector.gettX();
+                int yy = mDetector.gettY();
+                bigtext = "" + xx + "" + yy;
+
+        }
+        private void updatetext(){
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+
+                }
+            });
+        }
+    }*/
 
     private CameraBridgeViewBase mOpenCvCameraView;
 
@@ -84,8 +109,27 @@ public class MainActivity extends Activity implements OnTouchListener, CvCameraV
 
         setContentView(R.layout.color_blob_detection_surface_view);
 
+
+        runnable = new Runnable() {
+            @Override
+            public void run() {
+                    t = (TextView) findViewById(R.id.textview);
+                    //bigtext = "center";
+                    t.setText(bigtext);
+                    texthandle.postDelayed(this,100);
+            }
+        };
+        texthandle.post(runnable);
+        runnable.run();
+
+
+
+
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.color_blob_detection_activity_surface_view);
         mOpenCvCameraView.setCvCameraViewListener(this);
+
+//        hopethisworks textthread = new hopethisworks();
+//        textthread.start();
     }
 
     @Override
@@ -107,6 +151,11 @@ public class MainActivity extends Activity implements OnTouchListener, CvCameraV
             Log.d(TAG, "OpenCV library found inside package. Using it!");
             mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
         }
+    }
+    @Override
+    public void onBackPressed(){
+        mIsColorSelected = false;
+        bigtext = "";
     }
 
     public void onDestroy() {
@@ -142,7 +191,7 @@ public class MainActivity extends Activity implements OnTouchListener, CvCameraV
 
         mDetector.setXY(x,y);
 
-        Log.i(TAG, "Touch image coordinates: (" + x + ", " + y + ")");
+        //Log.i(TAG, "Touch image coordinates: (" + x + ", " + y + ")");
 
         //Core.circle(mRgba,(x,y),100,(0,0,255));
         if ((x < 0) || (y < 0) || (x > cols) || (y > rows)) return false;
@@ -172,8 +221,8 @@ public class MainActivity extends Activity implements OnTouchListener, CvCameraV
 
         mBlobColorRgba = converScalarHsv2Rgba(mBlobColorHsv);
 
-        Log.i(TAG, "Touched rgba color: (" + mBlobColorRgba.val[0] + ", " + mBlobColorRgba.val[1] +
-                ", " + mBlobColorRgba.val[2] + ", " + mBlobColorRgba.val[3] + ")");
+        //Log.i(TAG, "Touched rgba color: (" + mBlobColorRgba.val[0] + ", " + mBlobColorRgba.val[1] +
+        //        ", " + mBlobColorRgba.val[2] + ", " + mBlobColorRgba.val[3] + ")");
 
         mDetector.setHsvColor(mBlobColorHsv);
 
@@ -189,25 +238,46 @@ public class MainActivity extends Activity implements OnTouchListener, CvCameraV
     }
 
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
+        //setContentView(R.layout.color_blob_detection_surface_view);
+        //t = (TextView) findViewById(R.id.textview);
+
         mRgba = inputFrame.rgba();
        /* if (flagcount == 0){
             mIsColorSelected = false;
         }
         */
         if (mIsColorSelected) {
+            int cols = mRgba.cols();
+            int rows = mRgba.rows();
            mDetector.process(mRgba);
-            /*List<MatOfPoint> contours = mDetector.getContours();
-            Log.e(TAG, "Contours count: " + contours.size());
-            Mat con1;
-            if (contours.size() > 0) {
-                con1 = contours.get(0);
+            Imgproc.drawContours(mRgba, mDetector.getContours(), -1, CONTOUR_COLOR, 2, 4, mDetector.getContours().get(0), 0, new Point(0, 0));
 
-                //Point point1 = con1.get(0,0);
-                Imgproc.drawContours(mRgba, contours, -1, CONTOUR_COLOR, 2, 4, con1, 0, new Point(0, 0));
-            }*/
-            Imgproc.drawContours(mRgba,mDetector.getContours(),-1, CONTOUR_COLOR, 2, 4, mDetector.getContours().get(0), 0, new Point(0, 0));
-            // this switches the view from camera to the masked view
-            //mRgba = mDetector.getMask();
+            int xx = mDetector.gettX();
+            int yy = mDetector.gettY();
+            if(yy>(rows/2)) {
+                if (xx > (cols / 3)) {
+                    if (xx > ((cols / 3) * 2)) {
+                        bigtext = "Bottom Right";
+                    } else {
+                        bigtext = "Bottom Center";
+                    }
+                } else {
+                    bigtext = "Bottom Left";
+                }
+            }
+            else{
+                if (xx > (cols / 3)) {
+                    if (xx > ((cols / 3) * 2)) {
+                        bigtext = "Top Right";
+                    } else {
+                        bigtext = "Top Center";
+                    }
+                } else {
+                    bigtext = "Top Left";
+                }
+            }
+            texthandle.post(runnable);
+
             Mat colorLabel = mRgba.submat(104, 124, 104, 124);
             colorLabel.setTo(mBlobColorRgba);
 
